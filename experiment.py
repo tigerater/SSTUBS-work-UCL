@@ -22,7 +22,9 @@ def run_experiment(data):
     df = pd.read_json(data)
     print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
 
-    # Extract relevant feature columns; TODO - implement method/code to exclude feature(s) of choice
+    # TODO: implement method/code to preprocess data(?)
+
+    # Extract relevant feature columns
     cols = ["fixLineNum", "fixNodeLength", "fixNodeStartChar", "bugNodeLength", "bugNodeStartChar", "bugLineNum",
             "fileDepthNumber"]
     X = df[cols]
@@ -42,6 +44,20 @@ def run_experiment(data):
     # TODO: Output scores nicely e.g. print to console formatted or write to file
 
 
+def calculate_file_depth(data):
+    # Based on Tiger's script: calculate and append fileDepthNumber to data list
+    with open(data, encoding="utf8") as f:
+        d = json.load(f)
+
+    datacopy = d.copy()
+
+    for x in datacopy:
+        filedepth = x["bugFilePath"].count("/")
+        x.add("fileDepthNumber", filedepth)
+
+    return datacopy
+
+
 def main():
     parser = argparse.ArgumentParser(description='Run experiment')
     parser.add_argument(
@@ -50,12 +66,12 @@ def main():
         type=str,
         help='Path to data (JSON)'
     )
-    parser.add_argument(
-        '--exclude_feature',
-        default='fileDepthNumber',
-        type=str,
-        help='Name of feature(s) to exclude from model'
-    )
+    # parser.add_argument(
+    #     '--exclude_feature',
+    #     default='fileDepthNumber',
+    #     type=str,
+    #     help='Name of feature(s) to exclude from model'
+    # )
     args = parser.parse_args()
 
     # TODO: Run experiment function on input parameters
