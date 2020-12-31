@@ -10,7 +10,7 @@ from collections import Counter
 
 
 #path for location of extracted json file
-with open ('sstubs-0104.json/sstubs-0104.json', encoding="utf8") as f:
+with open ('sstubsLarge-0104.json', encoding="utf8") as f:
     data = json.load(f)
 
 #print(data[0])
