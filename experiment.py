@@ -7,13 +7,40 @@ Experiment implementation for MSR Mining Challenge 2021
 import json
 import argparse
 
-from sklearn.ensemble import RandomForestClassifier
+import numpy as np
+import pandas as pd
 
-def run_experiment(data, exclude_feature):
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
+
+
+def run_experiment(data):
     """Run the Random Forest model experiment."""
-    # TODO
-    # - Take in data and name of feature to exclude; preprocess and run for trees
-    # - Return feature importance and model accuracy
+
+    # Load data from JSON file
+    df = pd.read_json(data)
+    print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
+
+    # Extract relevant feature columns; TODO - implement method/code to exclude feature(s) of choice
+    cols = ["fixLineNum", "fixNodeLength", "fixNodeStartChar", "bugNodeLength", "bugNodeStartChar", "bugLineNum",
+            "fileDepthNumber"]
+    X = df[cols]
+    y = df["bugType"]
+
+    # Split data to 80:20 train:test
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+    clf = RandomForestClassifier(n_estimators=100)
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+
+    # Gather feature importance and model accuracy scores
+    importances = pd.Series(clf.feature_importances_, index=X.columns)
+    acc = metrics.accuracy_score(y_test, y_pred)
+
+    # TODO: Output scores nicely e.g. print to console formatted or write to file
+
 
 def main():
     parser = argparse.ArgumentParser(description='Run experiment')
@@ -31,8 +58,9 @@ def main():
     )
     args = parser.parse_args()
 
-    # Run experiment function on input parameters
-    # TODO
+    # TODO: Run experiment function on input parameters
+    # run_experiment(args.data)
+
 
 if __name__ == '__main__':
     main()
