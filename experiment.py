@@ -30,6 +30,8 @@ def run_experiment(data):
     X = df[cols]
     y = df["bugType"]
 
+    # TODO: Feature selection techniques for control model
+
     # Split data to 80:20 train:test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
