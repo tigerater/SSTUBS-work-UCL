@@ -22,7 +22,7 @@ def run_experiment(data):
     df = pd.read_json(data)
     print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
 
-    # TODO: implement method/code to preprocess data(?)
+    # TODO: implement method/code to preprocess data(?) e.g. oversampling and calculate fileDepthNumber
 
     # Extract relevant feature columns
     cols = ["fixLineNum", "fixNodeLength", "fixNodeStartChar", "bugNodeLength", "bugNodeStartChar", "bugLineNum",
@@ -30,7 +30,7 @@ def run_experiment(data):
     X = df[cols]
     y = df["bugType"]
 
-    # TODO: Feature selection techniques for control model
+    # TODO: Implement feature selection techniques for creating control model? Else: pre-select based on analysis
 
     # Split data to 80:20 train:test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
