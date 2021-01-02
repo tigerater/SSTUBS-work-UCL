@@ -1,6 +1,6 @@
 """
 Experiment implementation for MSR Mining Challenge 2021
-- Compares 2 Random Forest classifiers trained with and without file depth
+- Compares 2 Random Forest classifier models trained with and without file depth
 - Output: Feature importance weighting and model accuracy scores for each model for comparison
 """
 
@@ -15,8 +15,15 @@ from sklearn.model_selection import train_test_split
 from sklearn import metrics
 
 
-def run_experiment(data):
-    """Run the Random Forest model experiment."""
+def run_experiment(data, output_file):
+    """
+    Run the Random Forest model comparison experiment.
+    1. Input: Path to data file
+    2. Preproc.: Calculate fileDepthNumber
+    3. Preproc.: Undersample largest class (randomly cut data points to N where N = number of entries in smallest class)
+    4. Build models: Control model without fileDepthNumber, identical model with fileDepthNumber feature included
+    5. Write out feature importance and model accuracy scores to file
+    """
 
     # Load data from JSON file
     df = pd.read_json(data)
@@ -35,15 +42,30 @@ def run_experiment(data):
     # Split data to 80:20 train:test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
+    # Model 1: Control model - does not include fileDepthNumber feature
     clf = RandomForestClassifier(n_estimators=100)
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
 
-    # Gather feature importance and model accuracy scores
-    importances = pd.Series(clf.feature_importances_, index=X.columns)
-    acc = metrics.accuracy_score(y_test, y_pred)
+    # Model 2: Variation model of control with fileDepthNumber feature included
+    clf2 = RandomForestClassifier(n_estimators=100)
+    clf2.fit(X_train, y_train)
+    y_pred2 = clf2.predict(X_test)
 
-    # TODO: Output scores nicely e.g. print to console formatted or write to file
+    # Gather feature importance and model accuracy scores
+    importance1 = pd.Series(clf.feature_importances_, index=X.columns)
+    importance2 = pd.Series(clf2.feature_importances_, index=X.columns)
+    acc = metrics.accuracy_score(y_test, y_pred)
+    acc2 = metrics.accuracy_score(y_test, y_pred2)
+
+    # Write results to output file
+    with open(output_file, encoding="utf8") as f:
+        f.write("(Control) Feature importances \n")
+        f.write(str(importance1))
+        f.write("(Control) Model accuracy: " + str(acc))
+        f.write("(+ fileDepthNumber) Feature importances \n")
+        f.write(str(importance2))
+        f.write("(+ fileDepthNumber) Model accuracy: " + str(acc2))
 
 
 def calculate_file_depth(data):
@@ -61,23 +83,23 @@ def calculate_file_depth(data):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Run experiment')
+    parser = argparse.ArgumentParser(description='Run the experiment')
     parser.add_argument(
         '--data',
         default='newsstubssmall.json',
         type=str,
-        help='Path to data (JSON)'
+        help='Path to data file (JSON)'
     )
-    # parser.add_argument(
-    #     '--exclude_feature',
-    #     default='fileDepthNumber',
-    #     type=str,
-    #     help='Name of feature(s) to exclude from model'
-    # )
+    parser.add_argument(
+        '--output',
+        default='results.txt',
+        type=str,
+        help='Path/name of output file to write results out to.'
+    )
     args = parser.parse_args()
 
-    # TODO: Run experiment function on input parameters
-    # run_experiment(args.data)
+    # Run experiment function using console input parameters
+    # run_experiment(args.data, args.output)
 
 
 if __name__ == '__main__':
