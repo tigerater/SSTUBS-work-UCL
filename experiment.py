@@ -30,14 +30,18 @@ def run_experiment(data, output_file):
     print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
 
     # TODO: implement method/code to preprocess data(?) e.g. oversampling and calculate fileDepthNumber
+    # Oversampling: Quick and dirty method = Select N random samples matching size of smallest class
+    # Use Tiger's script for creating new fileDepthNumber field; Dorin's new stuff too?
 
-    # Extract relevant feature columns
+    # Extract relevant feature columns i.e. numerical fields
     cols = ["fixLineNum", "fixNodeLength", "fixNodeStartChar", "bugNodeLength", "bugNodeStartChar", "bugLineNum",
             "fileDepthNumber"]
-    X = df[cols]
-    y = df["bugType"]
+    X = df[cols]  # X = the feature set
+    y = df["bugType"]  # y = target variable (bugType)
 
-    # TODO: Implement feature selection techniques for creating control model? Else: pre-select based on analysis
+    # TODO: Implement feature selection method for creating control model. Else: pre-select based on analysis
+    # Use feature selection to choose from 'cols' features which would give good accuracy to a model
+    # Preliminary manual analysis suggests ["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]
 
     # Split data to 80:20 train:test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
@@ -48,6 +52,7 @@ def run_experiment(data, output_file):
     y_pred = clf.predict(X_test)
 
     # Model 2: Variation model of control with fileDepthNumber feature included
+    # TODO: Make new X set which is equal to X from Model 1 + fileDepthNumber column
     clf2 = RandomForestClassifier(n_estimators=100)
     clf2.fit(X_train, y_train)
     y_pred2 = clf2.predict(X_test)
@@ -58,6 +63,14 @@ def run_experiment(data, output_file):
     acc = metrics.accuracy_score(y_test, y_pred)
     acc2 = metrics.accuracy_score(y_test, y_pred2)
 
+    # (Debug) Print output to console
+    print("(Control) Feature importances \n")
+    print(str(importance1))
+    print("(Control) Model accuracy: " + str(acc))
+    print("(+ fileDepthNumber) Feature importances \n")
+    print(str(importance2))
+    print("(+ fileDepthNumber) Model accuracy: " + str(acc2))
+
     # Write results to output file
     with open(output_file, encoding="utf8") as f:
         f.write("(Control) Feature importances \n")
@@ -66,6 +79,7 @@ def run_experiment(data, output_file):
         f.write("(+ fileDepthNumber) Feature importances \n")
         f.write(str(importance2))
         f.write("(+ fileDepthNumber) Model accuracy: " + str(acc2))
+        f.close()
 
 
 def calculate_file_depth(data):
