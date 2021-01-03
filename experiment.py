@@ -6,8 +6,8 @@ Experiment implementation for MSR Mining Challenge 2021
 
 import json
 import argparse
+import pickle
 
-import numpy as np
 import pandas as pd
 
 from sklearn.ensemble import RandomForestClassifier
@@ -36,12 +36,12 @@ def run_experiment(data, output_file):
     # Extract relevant feature columns i.e. numerical fields
     cols = ["fixLineNum", "fixNodeLength", "fixNodeStartChar", "bugNodeLength", "bugNodeStartChar", "bugLineNum",
             "fileDepthNumber"]
-    X = df[cols]  # X = the feature set
     y = df["bugType"]  # y = target variable (bugType)
 
     # TODO: Implement feature selection method for creating control model. Else: pre-select based on analysis
     # Use feature selection to choose from 'cols' features which would give good accuracy to a model
-    # Preliminary manual analysis suggests ["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]
+    # Preliminary manual analysis suggests ["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar"]
+    X = df[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]  # X = the feature set
 
     # Split data to 80:20 train:test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
@@ -53,15 +53,18 @@ def run_experiment(data, output_file):
 
     # Model 2: Variation model of control with fileDepthNumber feature included
     # TODO: Make new X set which is equal to X from Model 1 + fileDepthNumber column
+    X2 = df[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
+    X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y, test_size=0.2)
+
     clf2 = RandomForestClassifier(n_estimators=100)
-    clf2.fit(X_train, y_train)
-    y_pred2 = clf2.predict(X_test)
+    clf2.fit(X2_train, y2_train)
+    y2_pred = clf2.predict(X2_test)
 
     # Gather feature importance and model accuracy scores
     importance1 = pd.Series(clf.feature_importances_, index=X.columns)
-    importance2 = pd.Series(clf2.feature_importances_, index=X.columns)
+    importance2 = pd.Series(clf2.feature_importances_, index=X2.columns)
     acc = metrics.accuracy_score(y_test, y_pred)
-    acc2 = metrics.accuracy_score(y_test, y_pred2)
+    acc2 = metrics.accuracy_score(y2_test, y2_pred)
 
     # (Debug) Print output to console
     print("(Control) Feature importances \n")
@@ -72,14 +75,16 @@ def run_experiment(data, output_file):
     print("(+ fileDepthNumber) Model accuracy: " + str(acc2))
 
     # Write results to output file
-    with open(output_file, encoding="utf8") as f:
+    with open(output_file, 'w', encoding="utf8") as f:
         f.write("(Control) Feature importances \n")
         f.write(str(importance1))
-        f.write("(Control) Model accuracy: " + str(acc))
-        f.write("(+ fileDepthNumber) Feature importances \n")
+        f.write("\n(Control) Model accuracy: " + str(acc))
+        f.write("\n\n(+ fileDepthNumber) Feature importances \n")
         f.write(str(importance2))
-        f.write("(+ fileDepthNumber) Model accuracy: " + str(acc2))
+        f.write("\n(+ fileDepthNumber) Model accuracy: " + str(acc2))
         f.close()
+
+    # TODO: Pickle the model(s) afterwards for reproduceability/documentation?
 
 
 def calculate_file_depth(data):
@@ -113,7 +118,7 @@ def main():
     args = parser.parse_args()
 
     # Run experiment function using console input parameters
-    # run_experiment(args.data, args.output)
+    run_experiment(args.data, args.output)
 
 
 if __name__ == '__main__':
