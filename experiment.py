@@ -25,14 +25,14 @@ def run_experiment(data, output_file):
     5. Write out feature importance and model accuracy scores to file
     """
     datacopy = calculate_file_depth(data)
+    
+    #Load the dataset with fileDepthNumber field
+    df = pd.DataFrame(datacopy)
+    print(df.head()) # For debug/ref: print first 5 data entries from JSON to check format is valid
 
     # TODO: implement method/code to preprocess data(?) e.g. oversampling and calculate fileDepthNumber
     # Oversampling: Quick and dirty method = Select N random samples matching size of smallest class
     # Use Tiger's script for creating new fileDepthNumber field; Dorin's new stuff too?
-
-    #Load the dataset with fileDepthNumber field
-    df = pd.DataFrame(datacopy)
-    print(df.head()) # For debug/ref: print first 5 data entries from JSON to check format is valid
 
     # Extract relevant feature columns i.e. numerical fields
     cols = ["fixLineNum", "fixNodeLength", "fixNodeStartChar", "bugNodeLength", "bugNodeStartChar", "bugLineNum",
