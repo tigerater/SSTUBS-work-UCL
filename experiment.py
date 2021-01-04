@@ -37,6 +37,7 @@ def run_experiment(data, output_file):
     y = df["bugType"]  # y = target variable (bugType)
 
     # Undersampling: Quick and dirty method = Select N random samples from largest class matching size of smallest class
+    # TODO: Implement seeding for reproduceability?
     undersample = RandomUnderSampler(sampling_strategy='majority')
     X_under, y_under = undersample.fit_resample(df, y)
     X_under['fileDepthNumber'] = X_under['bugFilePath'].str.count("/")
@@ -54,13 +55,13 @@ def run_experiment(data, output_file):
     #X_train_1.to_json(r'x_train_1.json')
     #X_test_1.to_json(r'x_test_1.json')
     
-    feature_model = RandomForestClassifier(random_state=100, n_estimators=50)
-    feature_model.fit(X_train_1, y_train)
-    print("Feature selection modelling - Feature importances: \n" + feature_model.feature_importances_)  # for debug
-
-    sel_model_tree = SelectFromModel(estimator=feature_model, prefit=True, threshold='mean')
-    X_train_sfm_tree = sel_model_tree.transform(X_train_1)
-    print(sel_model_tree.get_support())
+    # feature_model = RandomForestClassifier(random_state=100, n_estimators=50)
+    # feature_model.fit(X_train_1, y_train)
+    # print("Feature selection modelling - Feature importances: \n" + feature_model.feature_importances_)  # for debug
+    #
+    # sel_model_tree = SelectFromModel(estimator=feature_model, prefit=True, threshold='mean')
+    # X_train_sfm_tree = sel_model_tree.transform(X_train_1)
+    # print(sel_model_tree.get_support())
 
     # Model 1: Control model - does not include fileDepthNumber feature
     clf = RandomForestClassifier(n_estimators=100)
@@ -104,6 +105,7 @@ def run_experiment(data, output_file):
         f.write("\n(+ fileDepthNumber) Model accuracy: " + str(acc2))
         f.close()
 
+    # TODO: Output to CSV for easier results processing?
     # TODO: Pickle the model(s) afterwards for reproduceability/documentation?
 
 
