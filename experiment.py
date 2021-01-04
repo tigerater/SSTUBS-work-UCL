@@ -12,6 +12,7 @@ import pandas as pd
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import SelectFromModel
 from sklearn import metrics
 from imblearn.under_sampling import RandomUnderSampler
 
@@ -30,9 +31,6 @@ def run_experiment(data, output_file):
     df = pd.read_json(data)
     print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
 
-    # TODO: implement method/code to preprocess data e.g. undersampling and calculate fileDepthNumber
-    # Use Tiger's script for creating new fileDepthNumber field; Dorin's new stuff too?
-
     # Extract relevant feature columns i.e. numerical fields
     cols = ["fixLineNum", "fixNodeLength", "fixNodeStartChar", "bugNodeLength", "bugNodeStartChar", "bugLineNum",
             "fileDepthNumber"]
@@ -40,16 +38,22 @@ def run_experiment(data, output_file):
 
     # Undersampling: Quick and dirty method = Select N random samples from largest class matching size of smallest class
     undersample = RandomUnderSampler(sampling_strategy='majority')
-    X_over, y_over = undersample.fit_resample(df, y)
-    X_over['fileDepthNumber'] = X_over['bugFilePath'].str.count("/")
+    X_under, y_under = undersample.fit_resample(df, y)
+    X_under['fileDepthNumber'] = X_under['bugFilePath'].str.count("/")
+
+    # Split data to 80:20 train:test
+    X_train, X_test, y_train, y_test = train_test_split(X_under, y_under, test_size=0.2)
 
     # TODO: Implement feature selection method for creating control model. Else: pre-select based on analysis
     # Use feature selection to choose from 'cols' features which would give good accuracy to a model
     # Preliminary manual analysis suggests ["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar"]
-    X = X_over[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]  # X = the feature set
+    feature_model = RandomForestClassifier(random_state=100, n_estimators=50)
+    feature_model.fit(X_train, y_train)
+    print("Feature selection modelling - Feature importances: \n" + feature_model.feature_importances_)  # for debug
 
-    # Split data to 80:20 train:test
-    X_train, X_test, y_train, y_test = train_test_split(X, y_over, test_size=0.2)
+    sel_model_tree = SelectFromModel(estimator=feature_model, prefit=True, threshold='mean')
+    X_train_sfm_tree = sel_model_tree.transform(X_train)
+    print(sel_model_tree.get_support())
 
     # Model 1: Control model - does not include fileDepthNumber feature
     clf = RandomForestClassifier(n_estimators=100)
@@ -57,16 +61,15 @@ def run_experiment(data, output_file):
     y_pred = clf.predict(X_test)
 
     # Model 2: Variation model of control with fileDepthNumber feature included
-    # TODO: Make new X set which is equal to X from Model 1 + fileDepthNumber column
-    X2 = X_over[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
-    X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y_over, test_size=0.2)
+    X2 = X_under[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
+    X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y_under, test_size=0.2)
 
     clf2 = RandomForestClassifier(n_estimators=100)
     clf2.fit(X2_train, y2_train)
     y2_pred = clf2.predict(X2_test)
 
     # Gather feature importance and model accuracy scores
-    importance1 = pd.Series(clf.feature_importances_, index=X.columns)
+    importance1 = pd.Series(clf.feature_importances_, index=X_under.columns)
     importance2 = pd.Series(clf2.feature_importances_, index=X2.columns)
     acc = metrics.accuracy_score(y_test, y_pred)
     acc2 = metrics.accuracy_score(y2_test, y2_pred)
@@ -109,7 +112,7 @@ def main():
     parser = argparse.ArgumentParser(description='Run the experiment')
     parser.add_argument(
         '--data',
-        default='newsstubssmall.json',
+        default='sstubs.json',
         type=str,
         help='Path to data file (JSON)'
     )
