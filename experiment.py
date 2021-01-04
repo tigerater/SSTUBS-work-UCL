@@ -29,10 +29,9 @@ def run_experiment(data, output_file):
     
     #Load the dataset with fileDepthNumber field
     df = pd.DataFrame(datacopy)
-    print(df.head()) # For debug/ref: print first 5 data entries from JSON to check format is valid
+    print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
 
-    # TODO: implement method/code to preprocess data(?) e.g. undersampling and calculate fileDepthNumber
-    # Undersampling: Quick and dirty method = Select N random samples matching size of smallest class
+    # TODO: implement method/code to preprocess data e.g. undersampling and calculate fileDepthNumber
     # Use Tiger's script for creating new fileDepthNumber field; Dorin's new stuff too?
 
     # Extract relevant feature columns i.e. numerical fields
@@ -45,8 +44,12 @@ def run_experiment(data, output_file):
     # Preliminary manual analysis suggests ["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar"]
     X = df[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]  # X = the feature set
 
+    # Undersampling: Quick and dirty method = Select N random samples from largest class matching size of smallest class
+    undersample = RandomUnderSampler(sampling_strategy='majority')
+    X_over, y_over = undersample.fit_resample(X, y)
+
     # Split data to 80:20 train:test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X_over, y_over, test_size=0.2)
 
     # Model 1: Control model - does not include fileDepthNumber feature
     clf = RandomForestClassifier(n_estimators=100)
