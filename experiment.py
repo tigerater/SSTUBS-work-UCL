@@ -26,17 +26,13 @@ def run_experiment(data, output_file):
     """
     datacopy = calculate_file_depth(data)
 
-    # Load data from JSON file
-    df = pd.read_json(data)
-    print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
-
     # TODO: implement method/code to preprocess data(?) e.g. oversampling and calculate fileDepthNumber
     # Oversampling: Quick and dirty method = Select N random samples matching size of smallest class
     # Use Tiger's script for creating new fileDepthNumber field; Dorin's new stuff too?
 
-    #Dataset with fileDepthNumber field
-    df_withDepth= pd.DataFrame(datacopy)
-    print(df_withDepth.head()) # For debug/ref: print first 5 data entries from JSON to check format is valid
+    #Load the dataset with fileDepthNumber field
+    df = pd.DataFrame(datacopy)
+    print(df.head()) # For debug/ref: print first 5 data entries from JSON to check format is valid
 
     # Extract relevant feature columns i.e. numerical fields
     cols = ["fixLineNum", "fixNodeLength", "fixNodeStartChar", "bugNodeLength", "bugNodeStartChar", "bugLineNum",
@@ -58,7 +54,7 @@ def run_experiment(data, output_file):
 
     # Model 2: Variation model of control with fileDepthNumber feature included
     # TODO: Make new X set which is equal to X from Model 1 + fileDepthNumber column
-    X2 = df_withDepth[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
+    X2 = df[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
     X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y, test_size=0.2)
 
     clf2 = RandomForestClassifier(n_estimators=100)
@@ -102,7 +98,6 @@ def calculate_file_depth(data):
     for x in datacopy:
         filedepth = x["bugFilePath"].count("/")
         x['fileDepthNumber'] = filedepth
-
     return datacopy
 
 
