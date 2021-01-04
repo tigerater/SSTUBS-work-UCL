@@ -25,10 +25,9 @@ def run_experiment(data, output_file):
     4. Build models: Control model without fileDepthNumber, identical model with fileDepthNumber feature included
     5. Write out feature importance and model accuracy scores to file
     """
-    datacopy = calculate_file_depth(data)
     
-    #Load the dataset with fileDepthNumber field
-    df = pd.DataFrame(datacopy)
+    # Load data from JSON file
+    df = pd.read_json(data)
     print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
 
     # TODO: implement method/code to preprocess data e.g. undersampling and calculate fileDepthNumber
@@ -39,17 +38,18 @@ def run_experiment(data, output_file):
             "fileDepthNumber"]
     y = df["bugType"]  # y = target variable (bugType)
 
+    # Undersampling: Quick and dirty method = Select N random samples from largest class matching size of smallest class
+    undersample = RandomUnderSampler(sampling_strategy='majority')
+    X_over, y_over = undersample.fit_resample(df, y)
+    X_over['fileDepthNumber'] = X_over['bugFilePath'].str.count("/")
+
     # TODO: Implement feature selection method for creating control model. Else: pre-select based on analysis
     # Use feature selection to choose from 'cols' features which would give good accuracy to a model
     # Preliminary manual analysis suggests ["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar"]
-    X = df[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]  # X = the feature set
-
-    # Undersampling: Quick and dirty method = Select N random samples from largest class matching size of smallest class
-    undersample = RandomUnderSampler(sampling_strategy='majority')
-    X_over, y_over = undersample.fit_resample(X, y)
+    X = X_over[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]  # X = the feature set
 
     # Split data to 80:20 train:test
-    X_train, X_test, y_train, y_test = train_test_split(X_over, y_over, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y_over, test_size=0.2)
 
     # Model 1: Control model - does not include fileDepthNumber feature
     clf = RandomForestClassifier(n_estimators=100)
@@ -58,8 +58,8 @@ def run_experiment(data, output_file):
 
     # Model 2: Variation model of control with fileDepthNumber feature included
     # TODO: Make new X set which is equal to X from Model 1 + fileDepthNumber column
-    X2 = df[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
-    X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y, test_size=0.2)
+    X2 = X_over[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
+    X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y_over, test_size=0.2)
 
     clf2 = RandomForestClassifier(n_estimators=100)
     clf2.fit(X2_train, y2_train)
@@ -99,9 +99,9 @@ def calculate_file_depth(data):
 
     datacopy = d.copy()
 
-    for x in datacopy:
-        filedepth = x["bugFilePath"].count("/")
-        x['fileDepthNumber'] = filedepth
+    # for x in datacopy:
+    #     filedepth = x["bugFilePath"].count("/")
+    #     x['fileDepthNumber'] = filedepth
     return datacopy
 
 
