@@ -25,10 +25,11 @@ def run_experiment(data, output_file):
     4. Build models: Control model without fileDepthNumber, identical model with fileDepthNumber feature included
     5. Write out feature importance and model accuracy scores to file
     """
-
-    # Load data from JSON file
-    df = pd.read_json(data)
-    print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
+    datacopy = calculate_file_depth(data)
+    
+    #Load the dataset with fileDepthNumber field
+    df = pd.DataFrame(datacopy)
+    print(df.head()) # For debug/ref: print first 5 data entries from JSON to check format is valid
 
     # TODO: implement method/code to preprocess data(?) e.g. undersampling and calculate fileDepthNumber
     # Undersampling: Quick and dirty method = Select N random samples matching size of smallest class
@@ -97,8 +98,7 @@ def calculate_file_depth(data):
 
     for x in datacopy:
         filedepth = x["bugFilePath"].count("/")
-        x.add("fileDepthNumber", filedepth)
-
+        x['fileDepthNumber'] = filedepth
     return datacopy
 
 
