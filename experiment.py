@@ -13,6 +13,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
+from imblearn.under_sampling import RandomUnderSampler
 
 
 def run_experiment(data, output_file):
@@ -29,8 +30,8 @@ def run_experiment(data, output_file):
     df = pd.read_json(data)
     print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
 
-    # TODO: implement method/code to preprocess data(?) e.g. oversampling and calculate fileDepthNumber
-    # Oversampling: Quick and dirty method = Select N random samples matching size of smallest class
+    # TODO: implement method/code to preprocess data(?) e.g. undersampling and calculate fileDepthNumber
+    # Undersampling: Quick and dirty method = Select N random samples matching size of smallest class
     # Use Tiger's script for creating new fileDepthNumber field; Dorin's new stuff too?
 
     # Extract relevant feature columns i.e. numerical fields

@@ -2,6 +2,7 @@
 /shelf/
 /workspace.xml
 /.idea
+/venv
 
 *.json
 *.txt
