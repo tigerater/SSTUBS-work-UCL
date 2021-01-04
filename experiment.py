@@ -47,32 +47,44 @@ def run_experiment(data, output_file):
     # TODO: Implement feature selection method for creating control model. Else: pre-select based on analysis
     # Use feature selection to choose from 'cols' features which would give good accuracy to a model
     # Preliminary manual analysis suggests ["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar"]
+    
+    X_train_1 = X_train[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]  # X = the feature set
+    X_test_1 = X_test[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]
+
+    #X_train_1.to_json(r'x_train_1.json')
+    #X_test_1.to_json(r'x_test_1.json')
+    
     feature_model = RandomForestClassifier(random_state=100, n_estimators=50)
-    feature_model.fit(X_train, y_train)
+    feature_model.fit(X_train_1, y_train)
     print("Feature selection modelling - Feature importances: \n" + feature_model.feature_importances_)  # for debug
 
     sel_model_tree = SelectFromModel(estimator=feature_model, prefit=True, threshold='mean')
-    X_train_sfm_tree = sel_model_tree.transform(X_train)
+    X_train_sfm_tree = sel_model_tree.transform(X_train_1)
     print(sel_model_tree.get_support())
 
     # Model 1: Control model - does not include fileDepthNumber feature
     clf = RandomForestClassifier(n_estimators=100)
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
+    clf.fit(X_train_1, y_train)
+    y_pred = clf.predict(X_test_1)
 
     # Model 2: Variation model of control with fileDepthNumber feature included
-    X2 = X_under[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
-    X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y_under, test_size=0.2)
+
+    X_train_2 = X_train[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
+    X_test_2 = X_test[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
+
+    #X_train_2.to_json(r'x_train_2.json')
+    #X_test_2.to_json(r'x_test_2.json')
 
     clf2 = RandomForestClassifier(n_estimators=100)
-    clf2.fit(X2_train, y2_train)
-    y2_pred = clf2.predict(X2_test)
+    clf2.fit(X_train_2, y_train)
+    y2_pred = clf2.predict(X_test_2)
 
     # Gather feature importance and model accuracy scores
-    importance1 = pd.Series(clf.feature_importances_, index=X_under.columns)
-    importance2 = pd.Series(clf2.feature_importances_, index=X2.columns)
+
+    importance1 = pd.Series(clf.feature_importances_, index=X_test_1.columns)
+    importance2 = pd.Series(clf2.feature_importances_, index=X_test_2.columns)
     acc = metrics.accuracy_score(y_test, y_pred)
-    acc2 = metrics.accuracy_score(y2_test, y2_pred)
+    acc2 = metrics.accuracy_score(y_test, y2_pred)
 
     # (Debug) Print output to console
     print("(Control) Feature importances \n")
@@ -102,9 +114,9 @@ def calculate_file_depth(data):
 
     datacopy = d.copy()
 
-    # for x in datacopy:
-    #     filedepth = x["bugFilePath"].count("/")
-    #     x['fileDepthNumber'] = filedepth
+    for x in datacopy:
+        filedepth = x["bugFilePath"].count("/")
+        x['fileDepthNumber'] = filedepth
     return datacopy
 
 
