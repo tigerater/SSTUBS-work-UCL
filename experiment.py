@@ -18,7 +18,7 @@ from sklearn import metrics
 from imblearn.under_sampling import RandomUnderSampler
 
 
-def run_experiment(data, output_file, testSize):
+def run_experiment(data, output_file, testSize, feature):
     """
     Run the Random Forest model comparison experiment.
     1. Input: Path to data file
@@ -38,7 +38,8 @@ def run_experiment(data, output_file, testSize):
     # TODO: Implement seeding for reproduceability?
     undersample = RandomUnderSampler(sampling_strategy='majority')
     X_under, y_under = undersample.fit_resample(df, y)
-    X_under['fileDepthNumber'] = X_under['bugFilePath'].str.count("/")
+    if feature == 'fileDepthNumber':
+        X_under['fileDepthNumber'] = X_under['bugFilePath'].str.count("/")
 
     # Split data to 80:20 train:test
     X_train, X_test, y_train, y_test = train_test_split(X_under, y_under, test_size= testSize)
@@ -67,8 +68,8 @@ def run_experiment(data, output_file, testSize):
 
     # Model 2: Variation model of control with fileDepthNumber feature included
 
-    X_train_2 = X_train[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar", "fileDepthNumber"]]
-    X_test_2 = X_test[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar", "fileDepthNumber"]]
+    X_train_2 = X_train[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar", feature]]
+    X_test_2 = X_test[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar", feature]]
 
     clf2 = RandomForestClassifier(n_estimators=100)
     clf2.fit(X_train_2, y_train)
@@ -85,9 +86,9 @@ def run_experiment(data, output_file, testSize):
     print("(Control) Feature importances \n")
     print(str(importance1))
     print("(Control) Model accuracy: " + str(acc))
-    print("(+ fileDepthNumber) Feature importances \n")
+    print("(+ " + feature + ") Feature importances \n")
     print(str(importance2))
-    print("(+ fileDepthNumber) Model accuracy: " + str(acc2))
+    print("(+ " + feature + ") Model accuracy: " + str(acc2))
 
     # Write results to output file
     res = {}
@@ -95,8 +96,8 @@ def run_experiment(data, output_file, testSize):
         res['control_' + index]= str(value)
     res['Control_model_accuracy'] = str(acc)        
     for index, value in importance2.items():
-        res['fileDepth_' + index]= str(value) 
-    res['FileDepth_model_accuracy'] = str(acc2)
+        res[ feature + '_' + index]= str(value) 
+    res[ feature + '_model_accuracy'] = str(acc2)
 
     file_exists = os.path.isfile(output_file)
     with open(output_file, 'a', newline='',encoding="utf8") as f:  # You will need 'wb' mode in Python 2.x
@@ -131,19 +132,19 @@ def main():
     )
     parser.add_argument(
         '--output',
-        default='results0.5.csv',
+        default='results-bugLineNum-0.1.csv',
         type=str,
         help='Path/name of output file to write results out to.'
     )
     parser.add_argument(
         '--feature',
-        default='fileDepthNumber',
+        default='bugLineNum',
         type=str,
         help='Name of feature to test'
     )
     parser.add_argument(
         '--repetitions',
-        default='5',
+        default=100,
         type=int,
         help='How many times to run the experiment'
     )
@@ -161,7 +162,7 @@ def main():
     # )
     parser.add_argument(
         '--testSize',
-        default= 0.5,
+        default= 0.1,
         type=int,
         help='The test size of the dataset'
     )
@@ -169,7 +170,7 @@ def main():
 
     # Run experiment function using console input parameters
     for _ in range(args.repetitions):
-        run_experiment(args.data, args.output, args.testSize)
+        run_experiment(args.data, args.output, args.testSize,args.feature)
 
 
 if __name__ == '__main__':
