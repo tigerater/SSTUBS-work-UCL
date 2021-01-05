@@ -3,8 +3,8 @@
 /workspace.xml
 /.idea
 /venv
+/tmp
 
 *.json
-!miner/*.json
 *.txt
 *.csv
