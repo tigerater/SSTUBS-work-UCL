@@ -32,9 +32,6 @@ def run_experiment(data, output_file):
     df = pd.read_json(data)
     print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
 
-    # Extract relevant feature columns i.e. numerical fields
-    cols = ["fixLineNum", "fixNodeLength", "fixNodeStartChar", "bugNodeLength", "bugNodeStartChar", "bugLineNum",
-            "fileDepthNumber"]
     y = df["bugType"]  # y = target variable (bugType)
 
     # Undersampling: Quick and dirty method = Select N random samples from largest class matching size of smallest class
@@ -49,13 +46,15 @@ def run_experiment(data, output_file):
     # TODO: Implement feature selection method for creating control model. Else: pre-select based on analysis
     # Use feature selection to choose from 'cols' features which would give good accuracy to a model
     # Preliminary manual analysis suggests ["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar"]
+    # SKIPPED due to bugs and time constraint - hard coded pre-selected features for dirty fix
     
-    X_train_1 = X_train[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]  # X = the feature set
-    X_test_1 = X_test[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]
+    X_train_1 = X_train[["fixNodeLength", "bugNodeLength", "fixNodeStartChar", "bugNodeStartChar"]]  # X = the feature set
+    X_test_1 = X_test[["fixNodeLength", "bugNodeLength", "fixNodeStartChar", "bugNodeStartChar"]]
     
     # feature_model = RandomForestClassifier(random_state=100, n_estimators=50)
     # feature_model.fit(X_train_1, y_train)
-    # print("Feature selection modelling - Feature importances: \n" + feature_model.feature_importances_)  # for debug
+    # imp = feature_model.feature_importances_
+    # print("Feature selection modelling - Feature importances: \n" + imp)  # for debug
     #
     # sel_model_tree = SelectFromModel(estimator=feature_model, prefit=True, threshold='mean')
     # X_train_sfm_tree = sel_model_tree.transform(X_train_1)
@@ -68,8 +67,8 @@ def run_experiment(data, output_file):
 
     # Model 2: Variation model of control with fileDepthNumber feature included
 
-    X_train_2 = X_train[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
-    X_test_2 = X_test[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
+    X_train_2 = X_train[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar", "fileDepthNumber"]]
+    X_test_2 = X_test[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "fixNodeStartChar", "fileDepthNumber"]]
 
     clf2 = RandomForestClassifier(n_estimators=100)
     clf2.fit(X_train_2, y_train)
@@ -137,11 +136,29 @@ def main():
         help='Path/name of output file to write results out to.'
     )
     parser.add_argument(
+        '--feature',
+        default='fileDepthNumber',
+        type=str,
+        help='Name of feature to test'
+    )
+    parser.add_argument(
         '--repetitions',
-        default='1',
+        default='5',
         type=int,
         help='How many times to run the experiment'
     )
+    # parser.add_argument(
+    #     '--tt_seed',
+    #     default=42,
+    #     type=int,
+    #     help='Random seed for test-train set splitting'
+    # )
+    # parser.add_argument(
+    #     '--us_seed',
+    #     default=42,
+    #     type=int,
+    #     help='Random seed for undersampling of data'
+    # )
     args = parser.parse_args()
 
     # Run experiment function using console input parameters
