@@ -7,8 +7,9 @@ Experiment implementation for MSR Mining Challenge 2021
 import json
 import argparse
 import pickle
-
+import csv
 import pandas as pd
+import os.path
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -51,9 +52,6 @@ def run_experiment(data, output_file):
     
     X_train_1 = X_train[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]  # X = the feature set
     X_test_1 = X_test[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum"]]
-
-    #X_train_1.to_json(r'x_train_1.json')
-    #X_test_1.to_json(r'x_test_1.json')
     
     # feature_model = RandomForestClassifier(random_state=100, n_estimators=50)
     # feature_model.fit(X_train_1, y_train)
@@ -72,9 +70,6 @@ def run_experiment(data, output_file):
 
     X_train_2 = X_train[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
     X_test_2 = X_test[["fixNodeLength", "bugNodeLength", "bugNodeStartChar", "bugLineNum", "fileDepthNumber"]]
-
-    #X_train_2.to_json(r'x_train_2.json')
-    #X_test_2.to_json(r'x_test_2.json')
 
     clf2 = RandomForestClassifier(n_estimators=100)
     clf2.fit(X_train_2, y_train)
@@ -96,16 +91,21 @@ def run_experiment(data, output_file):
     print("(+ fileDepthNumber) Model accuracy: " + str(acc2))
 
     # Write results to output file
-    with open(output_file, 'w', encoding="utf8") as f:
-        f.write("(Control) Feature importances \n")
-        f.write(str(importance1))
-        f.write("\n(Control) Model accuracy: " + str(acc))
-        f.write("\n\n(+ fileDepthNumber) Feature importances \n")
-        f.write(str(importance2))
-        f.write("\n(+ fileDepthNumber) Model accuracy: " + str(acc2))
-        f.close()
+    res = {}
+    for index, value in importance1.items():
+        res['control_' + index]= str(value)
+    res['Control_model_accuracy'] = str(acc)        
+    for index, value in importance2.items():
+        res['fileDepth_' + index]= str(value) 
+    res['FileDepth_model_accuracy'] = str(acc2)
 
-    # TODO: Output to CSV for easier results processing?
+    file_exists = os.path.isfile(output_file)
+    with open(output_file, 'a', newline='',encoding="utf8") as f:  # You will need 'wb' mode in Python 2.x
+        w= csv.DictWriter(f, res.keys())
+        if not file_exists:
+            w.writeheader()
+        w.writerow(res)
+
     # TODO: Pickle the model(s) afterwards for reproduceability/documentation?
 
 
@@ -132,14 +132,21 @@ def main():
     )
     parser.add_argument(
         '--output',
-        default='results.txt',
+        default='results.csv',
         type=str,
         help='Path/name of output file to write results out to.'
+    )
+    parser.add_argument(
+        '--repetitions',
+        default='1',
+        type=int,
+        help='How many times to run the experiment'
     )
     args = parser.parse_args()
 
     # Run experiment function using console input parameters
-    run_experiment(args.data, args.output)
+    for _ in range(args.repetitions):
+        run_experiment(args.data, args.output)
 
 
 if __name__ == '__main__':
