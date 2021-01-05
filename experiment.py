@@ -18,7 +18,7 @@ from sklearn import metrics
 from imblearn.under_sampling import RandomUnderSampler
 
 
-def run_experiment(data, output_file):
+def run_experiment(data, output_file, testSize):
     """
     Run the Random Forest model comparison experiment.
     1. Input: Path to data file
@@ -30,7 +30,7 @@ def run_experiment(data, output_file):
     
     # Load data from JSON file
     df = pd.read_json(data)
-    print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
+    #print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
 
     y = df["bugType"]  # y = target variable (bugType)
 
@@ -41,7 +41,7 @@ def run_experiment(data, output_file):
     X_under['fileDepthNumber'] = X_under['bugFilePath'].str.count("/")
 
     # Split data to 80:20 train:test
-    X_train, X_test, y_train, y_test = train_test_split(X_under, y_under, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X_under, y_under, test_size= testSize)
 
     # TODO: Implement feature selection method for creating control model. Else: pre-select based on analysis
     # Use feature selection to choose from 'cols' features which would give good accuracy to a model
@@ -125,13 +125,13 @@ def main():
     parser = argparse.ArgumentParser(description='Run the experiment')
     parser.add_argument(
         '--data',
-        default='sstubs.json',
+        default='sstubsLarge-0104.json',
         type=str,
         help='Path to data file (JSON)'
     )
     parser.add_argument(
         '--output',
-        default='results.csv',
+        default='results0.5.csv',
         type=str,
         help='Path/name of output file to write results out to.'
     )
@@ -159,11 +159,17 @@ def main():
     #     type=int,
     #     help='Random seed for undersampling of data'
     # )
+    parser.add_argument(
+        '--testSize',
+        default= 0.5,
+        type=int,
+        help='The test size of the dataset'
+    )
     args = parser.parse_args()
 
     # Run experiment function using console input parameters
     for _ in range(args.repetitions):
-        run_experiment(args.data, args.output)
+        run_experiment(args.data, args.output, args.testSize)
 
 
 if __name__ == '__main__':
