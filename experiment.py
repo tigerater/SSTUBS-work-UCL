@@ -10,12 +10,8 @@ import pickle
 import csv
 import pandas as pd
 import os.path
-import multiprocessing as mp
 import time
-import threading
 
-from multiprocessing import Process
-from joblib import Parallel, delayed
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectFromModel
@@ -181,10 +177,14 @@ def main():
     for _ in range(100):
 
         # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.1.csv", 0.1,"fileDepthNumber")
-        run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.2.csv", 0.2,"fileDepthNumber")
+        # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.2.csv", 0.2,"fileDepthNumber")
         # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.3.csv", 0.3,"fileDepthNumber")
         # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.4.csv", 0.4,"fileDepthNumber")
         # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.5.csv", 0.5,"fileDepthNumber")
+
+        run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-bugLineNum-0.3a.csv", 0.3,"bugLineNum")
+        run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-bugLineNum-0.4a.csv", 0.4,"bugLineNum")
+        run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-bugLineNum-0.5a.csv", 0.5,"bugLineNum")
 
     print('Time in parallel:', time.time() - ts)
 
