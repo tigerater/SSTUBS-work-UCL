@@ -1,6 +1,6 @@
 """
 Experiment implementation for MSR Mining Challenge 2021
-- Compares 2 Random Forest classifier models trained with and without file depth
+- Compares 2 Random Forest classifier models trained with and without a given feature
 - Output: Feature importance weighting and model accuracy scores for each model for comparison
 """
 
@@ -31,7 +31,6 @@ def run_experiment(data, output_file, testSize, feature):
     
     # Load data from JSON file
     df = pd.read_json(data)
-    #print(df.head())  # For debug/ref: print first 5 data entries from JSON to check format is valid
 
     y = df["bugType"]  # y = target variable (bugType)
 
@@ -53,15 +52,6 @@ def run_experiment(data, output_file, testSize, feature):
     
     X_train_1 = X_train[["fixNodeLength", "bugNodeLength", "fixNodeStartChar", "bugNodeStartChar"]]  # X = the feature set
     X_test_1 = X_test[["fixNodeLength", "bugNodeLength", "fixNodeStartChar", "bugNodeStartChar"]]
-    
-    # feature_model = RandomForestClassifier(random_state=100, n_estimators=50)
-    # feature_model.fit(X_train_1, y_train)
-    # imp = feature_model.feature_importances_
-    # print("Feature selection modelling - Feature importances: \n" + imp)  # for debug
-    #
-    # sel_model_tree = SelectFromModel(estimator=feature_model, prefit=True, threshold='mean')
-    # X_train_sfm_tree = sel_model_tree.transform(X_train_1)
-    # print(sel_model_tree.get_support())
 
     # Model 1: Control model - does not include fileDepthNumber feature
     clf = RandomForestClassifier(n_estimators=100)
@@ -83,14 +73,6 @@ def run_experiment(data, output_file, testSize, feature):
     importance2 = pd.Series(clf2.feature_importances_, index=X_test_2.columns)
     acc = metrics.accuracy_score(y_test, y_pred)
     acc2 = metrics.accuracy_score(y_test, y2_pred)
-
-    # (Debug) Print output to console
-    # print("(Control) Feature importances \n")
-    # print(str(importance1))
-    # print("(Control) Model accuracy: " + str(acc))
-    # print("(+ " + feature + ") Feature importances \n")
-    # print(str(importance2))
-    # print("(+ " + feature + ") Model accuracy: " + str(acc2))
 
     # Write results to output file
     res = {}
@@ -151,18 +133,6 @@ def main():
         type=int,
         help='How many times to run the experiment'
     )
-    # parser.add_argument(
-    #     '--tt_seed',
-    #     default=42,
-    #     type=int,
-    #     help='Random seed for test-train set splitting'
-    # )
-    # parser.add_argument(
-    #     '--us_seed',
-    #     default=42,
-    #     type=int,
-    #     help='Random seed for undersampling of data'
-    # )
     parser.add_argument(
         '--testSize',
         default= 0.1,
