@@ -171,7 +171,7 @@ def main():
     )
     args = parser.parse_args()
 
-    Run experiment function using console input parameters
+    #Run experiment function using console input parameters
     for _ in range(args.repetitions):
         run_experiment(args.data, args.output, args.testSize,args.feature)
 
