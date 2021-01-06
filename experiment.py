@@ -10,7 +10,12 @@ import pickle
 import csv
 import pandas as pd
 import os.path
+import multiprocessing as mp
+import time
+import threading
 
+from multiprocessing import Process
+from joblib import Parallel, delayed
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectFromModel
@@ -83,12 +88,12 @@ def run_experiment(data, output_file, testSize, feature):
     acc2 = metrics.accuracy_score(y_test, y2_pred)
 
     # (Debug) Print output to console
-    print("(Control) Feature importances \n")
-    print(str(importance1))
-    print("(Control) Model accuracy: " + str(acc))
-    print("(+ " + feature + ") Feature importances \n")
-    print(str(importance2))
-    print("(+ " + feature + ") Model accuracy: " + str(acc2))
+    # print("(Control) Feature importances \n")
+    # print(str(importance1))
+    # print("(Control) Model accuracy: " + str(acc))
+    # print("(+ " + feature + ") Feature importances \n")
+    # print(str(importance2))
+    # print("(+ " + feature + ") Model accuracy: " + str(acc2))
 
     # Write results to output file
     res = {}
@@ -123,6 +128,7 @@ def calculate_file_depth(data):
 
 
 def main():
+    ts = time.time()
     parser = argparse.ArgumentParser(description='Run the experiment')
     parser.add_argument(
         '--data',
@@ -169,9 +175,18 @@ def main():
     args = parser.parse_args()
 
     # Run experiment function using console input parameters
-    for _ in range(args.repetitions):
-        run_experiment(args.data, args.output, args.testSize,args.feature)
+    # for _ in range(args.repetitions):
+    #     run_experiment(args.data, args.output, args.testSize,args.feature)
 
+    for _ in range(100):
+
+        # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.1.csv", 0.1,"fileDepthNumber")
+        run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.2.csv", 0.2,"fileDepthNumber")
+        # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.3.csv", 0.3,"fileDepthNumber")
+        # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.4.csv", 0.4,"fileDepthNumber")
+        # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.5.csv", 0.5,"fileDepthNumber")
+
+    print('Time in parallel:', time.time() - ts)
 
 if __name__ == '__main__':
     main()
