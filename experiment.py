@@ -39,6 +39,7 @@ def run_experiment(data, output_file, testSize, feature):
     # TODO: Implement seeding for reproduceability?
     undersample = RandomUnderSampler(sampling_strategy='majority')
     X_under, y_under = undersample.fit_resample(df, y)
+    #Calculate fileDepthNumber
     if feature == 'fileDepthNumber':
         X_under['fileDepthNumber'] = X_under['bugFilePath'].str.count("/")
 
@@ -170,23 +171,11 @@ def main():
     )
     args = parser.parse_args()
 
-    # Run experiment function using console input parameters
-    # for _ in range(args.repetitions):
-    #     run_experiment(args.data, args.output, args.testSize,args.feature)
+    Run experiment function using console input parameters
+    for _ in range(args.repetitions):
+        run_experiment(args.data, args.output, args.testSize,args.feature)
 
-    for _ in range(100):
-
-        # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.1.csv", 0.1,"fileDepthNumber")
-        # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.2.csv", 0.2,"fileDepthNumber")
-        # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.3.csv", 0.3,"fileDepthNumber")
-        # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.4.csv", 0.4,"fileDepthNumber")
-        # run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-fileDepthNumber-0.5.csv", 0.5,"fileDepthNumber")
-
-        run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-bugLineNum-0.3a.csv", 0.3,"bugLineNum")
-        run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-bugLineNum-0.4a.csv", 0.4,"bugLineNum")
-        run_experiment("miner/enrichedSStuBsLarge-0104.json", "results-bugLineNum-0.5a.csv", 0.5,"bugLineNum")
-
-    print('Time in parallel:', time.time() - ts)
+    print('Time:', time.time() - ts)
 
 if __name__ == '__main__':
     main()
